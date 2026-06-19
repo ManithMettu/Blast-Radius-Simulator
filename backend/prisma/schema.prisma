@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ServiceStatus {
+  HEALTHY
+  DEGRADED
+  FAILED
+}
+
+enum Criticality {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Service {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  description String?
+  owner       String?
+  criticality Criticality   @default(MEDIUM)
+  status      ServiceStatus @default(HEALTHY)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  dependencies Dependency[] @relation("DependentService")
+  dependents   Dependency[] @relation("DependencyTarget")
+
+  @@index([status])
+  @@index([criticality])
+  @@index([owner])
+}
+
+model Dependency {
+  id           String   @id @default(cuid())
+  dependentId  String
+  dependencyId String
+  createdAt    DateTime @default(now())
+
+  dependent  Service @relation("DependentService", fields: [dependentId], references: [id], onDelete: Cascade)
+  dependency Service @relation("DependencyTarget", fields: [dependencyId], references: [id], onDelete: Cascade)
+
+  @@unique([dependentId, dependencyId])
+  @@index([dependentId])
+  @@index([dependencyId])
+}
+
+model Simulation {
+  id               String   @id @default(cuid())
+  name             String?
+  failedServiceIds String[]
+  totalImpacted    Int      @default(0)
+  severityScore    Float    @default(0)
+  results          Json
+  createdAt        DateTime @default(now())
+
+  @@index([createdAt])
+}

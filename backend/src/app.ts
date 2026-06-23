@@ -10,16 +10,21 @@ import { rateLimit } from "./middleware/rate-limit";
 import { requestId } from "./middleware/request-id";
 import { createRoutes } from "./routes";
 
-export function buildExpressApp(io: SocketServer) {
+function getAllowedOrigins(): string | string[] {
+  return env.FRONTEND_URL.split(",").map((url) => url.trim());
+}
+
+export function buildExpressApp(io?: SocketServer) {
   const app = express();
   const controllers = createControllers(io);
+  const allowedOrigins = getAllowedOrigins();
 
   app.set("trust proxy", 1);
   app.use(requestId);
   app.use(helmet());
   app.use(
     cors({
-      origin: env.FRONTEND_URL,
+      origin: allowedOrigins,
       credentials: true,
     }),
   );

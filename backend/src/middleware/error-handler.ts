@@ -30,10 +30,18 @@ export function errorHandler(
     return;
   }
 
-  console.error("[ERROR]", err);
+  console.error(
+    "[ERROR]",
+    err instanceof Error ? err.message : err,
+    err instanceof Error ? err.stack : undefined,
+  );
+
+  const exposeDetails =
+    process.env.EXPOSE_API_ERRORS === "true" ||
+    process.env.NODE_ENV !== "production";
 
   res.status(500).json({
-    message: "Internal server error",
+    message: exposeDetails && err instanceof Error ? err.message : "Internal server error",
     code: "INTERNAL_ERROR",
   });
 }

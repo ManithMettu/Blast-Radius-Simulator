@@ -129,13 +129,25 @@ export const serviceRepository = {
   },
 
   async countByStatus() {
-    const [total, healthy, degraded, failed] = await Promise.all([
-      prisma.service.count(),
-      prisma.service.count({ where: { status: "HEALTHY" } }),
-      prisma.service.count({ where: { status: "DEGRADED" } }),
-      prisma.service.count({ where: { status: "FAILED" } }),
-    ]);
+    const groups = await prisma.service.groupBy({
+      by: ["status"],
+      _count: { _all: true },
+    });
 
-    return { total, healthy, degraded, failed };
+    const counts = {
+      total: 0,
+      healthy: 0,
+      degraded: 0,
+      failed: 0,
+    };
+
+    for (const group of groups) {
+      counts.total += group._count._all;
+      if (group.status === "HEALTHY") counts.healthy = group._count._all;
+      if (group.status === "DEGRADED") counts.degraded = group._count._all;
+      if (group.status === "FAILED") counts.failed = group._count._all;
+    }
+
+    return counts;
   },
 };

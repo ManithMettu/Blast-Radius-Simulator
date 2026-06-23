@@ -11,7 +11,7 @@ import type { z } from "zod";
 type ServiceFilters = z.infer<typeof serviceFiltersSchema>;
 type SimulationFilters = z.infer<typeof simulationFiltersSchema>;
 
-export function createControllers(io: SocketServer) {
+export function createControllers(io?: SocketServer) {
   return {
     health: {
       async summary(_req: Request, res: Response) {
